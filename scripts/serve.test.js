@@ -27,3 +27,16 @@ test("refuses dotfiles inside public directories", () => {
 test("refuses NUL and control characters", () => {
   for (const p of ["/kit/a%00b", "/kit/a%0Ab.js", "/specimen/%7F"]) expect(resolvePublic(p)).toBeNull();
 });
+
+test("rejects foreign Host headers (DNS rebinding) and non-GET methods", async () => {
+  const { serve } = await import("./serve.mjs");
+  const s = serve(0);
+  try {
+    const url = `http://127.0.0.1:${s.port}/specimen/`;
+    expect((await fetch(url)).status).toBe(200);
+    expect((await fetch(url, { headers: { host: "evil.example" } })).status).toBe(403);
+    expect((await fetch(url, { method: "POST" })).status).toBe(405);
+  } finally {
+    s.stop(true);
+  }
+});

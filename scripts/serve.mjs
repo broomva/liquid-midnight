@@ -28,6 +28,8 @@ export function serve(port = Number(process.env.PORT) || 4317) {
     development: false, // never Bun's dev error page (it embeds paths and source)
     async fetch(req) {
       if (req.method !== "GET" && req.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+      const host = (req.headers.get("host") || "").replace(/:\d+$/, "");
+      if (host !== "127.0.0.1" && host !== "localhost") return new Response("forbidden", { status: 403 }); // DNS rebinding
       try {
         const file = resolvePublic(new URL(req.url).pathname);
         if (!file) return new Response("not found", { status: 404 });
