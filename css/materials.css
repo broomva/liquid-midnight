@@ -491,12 +491,13 @@
   border-radius: 14px;
   background: oklch(0.155 0.028 250 / 0.72);
   font: 500 64px / 1.2 var(--lm-font-caption);
-  color: var(--lm-t1);
+  /* the box is always Midnight, so its text keeps the night colours in day mode too (burned-in captions) */
+  color: oklch(0.975 0.004 250);
   text-align: center;
 }
 .lm-caption mark {
   background: none;
-  color: var(--lm-blue);
+  color: oklch(0.71 0.15 252);
 }
 
 /* focus: always visible, never removed */
