@@ -156,9 +156,24 @@ try {
     await Promise.resolve();
     await Promise.resolve();
     const hostReleased = lightGone && ORB.layers === beforeHost - 1;
+    // a canvas inside a same-origin iframe (its own document and realm)
+    const frame = document.createElement("iframe");
+    frame.srcdoc = "<!doctype html><body style='margin:0'><div id='w' style='position:relative'></div></body>";
+    host.append(frame);
+    await new Promise((r) => frame.addEventListener("load", r, { once: true }));
+    const fc = frame.contentDocument.createElement("canvas");
+    fc.width = fc.height = 64;
+    frame.contentDocument.getElementById("w").append(fc);
+    ORB.attach(fc);
+    await new Promise((r) => setTimeout(r, 0));
+    const beforeFrame = ORB.layers;
+    fc.remove();
+    await Promise.resolve();
+    await Promise.resolve();
+    const frameReleased = ORB.layers === beforeFrame - 1;
     ORB.detach(cv);
     host.remove();
-    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased, movedReleased, hostReleased };
+    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased, movedReleased, hostReleased, frameReleased };
   });
   check(
     life.n <= 3 && life.after <= 2 && life.ok,
@@ -169,6 +184,7 @@ try {
   check(life.shadowReleased, "a canvas removed inside a shadow root releases its orb layer too");
   check(life.movedReleased, "a canvas moved into a shadow root after its first attach is still released");
   check(life.hostReleased, "removing a shadow host releases the canvas inside it");
+  check(life.frameReleased, "a canvas removed inside a same-origin iframe releases its orb layer");
 
   // 4. determinism of renderAt
   const snap = () =>
