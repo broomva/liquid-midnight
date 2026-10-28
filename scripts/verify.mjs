@@ -101,9 +101,28 @@ try {
     solo.remove();
     await new Promise((r) => setTimeout(r, 50));
     const autoReleased = ORB.layers === before - 1;
+    // inside a shadow root too (document-level observers do not see shadow DOM)
+    const shadowHost = document.createElement("div");
+    host.append(shadowHost);
+    const shadow = shadowHost.attachShadow({ mode: "open" });
+    const wrap = document.createElement("div");
+    wrap.style.position = "relative";
+    shadow.append(wrap);
+    const sc = document.createElement("canvas");
+    sc.width = sc.height = 64;
+    wrap.append(sc);
+    ORB.attach(sc);
+    // deliver the records queued by the setup above first, so they cannot release the canvas by coincidence
+    await new Promise((r) => setTimeout(r, 0));
+    const beforeShadow = ORB.layers;
+    sc.remove();
+    // observer callbacks run as microtasks: check before any timer lets unrelated document mutations fire the observer
+    await Promise.resolve();
+    await Promise.resolve();
+    const shadowReleased = ORB.layers === beforeShadow - 1;
     ORB.detach(cv);
     host.remove();
-    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased };
+    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased };
   });
   check(
     life.n <= 3 && life.after <= 2 && life.ok,
@@ -111,6 +130,7 @@ try {
   );
   check(life.op === "0.25", `orb layer mirrors its canvas opacity (${life.op})`);
   check(life.autoReleased, "an unmounted canvas releases its orb layer without another attach()");
+  check(life.shadowReleased, "a canvas removed inside a shadow root releases its orb layer too");
 
   // 4. determinism of renderAt
   const snap = () =>
