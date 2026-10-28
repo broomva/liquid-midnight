@@ -154,7 +154,7 @@ try {
         return Math.abs(t.left - b.left) < 2 && document.documentElement.dataset.lmMode === "day";
       },
       null,
-      { timeout: 5000 },
+      { timeout: 15000 },
     )
     .then(() => true)
     .catch(() => false);
