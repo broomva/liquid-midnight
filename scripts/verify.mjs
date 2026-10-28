@@ -137,9 +137,28 @@ try {
     await Promise.resolve();
     await Promise.resolve();
     const movedReleased = ORB.layers === beforeMove - 1;
+    // removing a shadow HOST (how components unmount) must release a canvas inside it. Detach every light-DOM layer
+    // first, so the document is observed only if the fix observes it (the hero and diagram layers would mask a regression)
+    ORB.detach(document.getElementById("heroCv"));
+    ORB.detach(document.getElementById("diagCv"));
+    ORB.detach(cv);
+    const lightGone = ORB.layers === 0;
+    const host3 = document.createElement("div");
+    host.append(host3);
+    const sh3 = host3.attachShadow({ mode: "open" });
+    const c3 = document.createElement("canvas");
+    c3.width = c3.height = 64;
+    sh3.append(c3);
+    ORB.attach(c3);
+    await new Promise((r) => setTimeout(r, 0));
+    const beforeHost = ORB.layers;
+    host3.remove();
+    await Promise.resolve();
+    await Promise.resolve();
+    const hostReleased = lightGone && ORB.layers === beforeHost - 1;
     ORB.detach(cv);
     host.remove();
-    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased, movedReleased };
+    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased, movedReleased, hostReleased };
   });
   check(
     life.n <= 3 && life.after <= 2 && life.ok,
@@ -149,6 +168,7 @@ try {
   check(life.autoReleased, "an unmounted canvas releases its orb layer without another attach()");
   check(life.shadowReleased, "a canvas removed inside a shadow root releases its orb layer too");
   check(life.movedReleased, "a canvas moved into a shadow root after its first attach is still released");
+  check(life.hostReleased, "removing a shadow host releases the canvas inside it");
 
   // 4. determinism of renderAt
   const snap = () =>
@@ -183,6 +203,31 @@ try {
   check(settled.counters.join() === "128,096,032", `reduced motion shows the settled state, not t=0 (counters ${settled.counters.join(" ")})`);
   check(settled.thumb > 20, `reduced motion: the segmented thumb is laid out (${settled.thumb.toFixed(0)} px)`);
   check(settled.motionPressed === "false", "the Motion control reflects the OS reduced-motion setting");
+  // a resize under reduced motion must repaint the (cleared) background
+  // mute the page's context-restore repaint so only the resize handler can repaint (otherwise it masks a regression)
+  await rm.evaluate(async () => {
+    const { ORB } = await import("../kit/index.js");
+    ORB.onChange(() => {});
+  });
+  await rm.setViewportSize({ width: 1300, height: 900 });
+  // sample only after the resize has applied and the canvas was refit (cleared); before that the old pixels pass
+  await rm.waitForFunction(() => innerWidth === 1300 && document.getElementById("bg").width === 1300 * Math.min(2, devicePixelRatio || 1), null, {
+    timeout: 15000,
+  });
+  const bgPainted = await rm
+    .waitForFunction(
+      () => {
+        const c = document.getElementById("bg");
+        const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+        for (let i = 3; i < d.length; i += 4 * 97) if (d[i]) return true;
+        return false;
+      },
+      null,
+      { timeout: 15000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  check(bgPainted, "reduced motion: a resize repaints the ASCII background");
   await rm.click('#modeSeg button[data-mode="day"]');
   const moved = await rm
     .waitForFunction(
