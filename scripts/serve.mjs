@@ -1,5 +1,6 @@
 // Static server for the specimen (ES modules need http, not file://). bun run serve → http://localhost:4317/specimen/
 // Loopback only; serves only the public asset directories below, never dotfiles or the rest of the repo.
+import { realpathSync } from "node:fs";
 import { join, normalize, sep } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -34,7 +35,17 @@ export function serve(port = Number(process.env.PORT) || 4317) {
         const file = resolvePublic(new URL(req.url).pathname);
         if (!file) return new Response("not found", { status: 404 });
         const f = Bun.file(file);
-        return (await f.exists()) ? new Response(f) : new Response("not found", { status: 404 });
+        if (!(await f.exists())) return new Response("not found", { status: 404 });
+        // a symlink inside a public directory must not lead outside the repo (e.g. specimen/leak -> ../.env)
+        const real = realpathSync(file);
+        const root = realpathSync(ROOT);
+        const rel = real
+          .slice(root.length + 1)
+          .split(sep)
+          .join("/");
+        if (!real.startsWith(root + sep) || !PUBLIC.some((d) => rel === d || rel.startsWith(`${d}/`)) || rel.split("/").some((p) => p.startsWith(".")))
+          return new Response("not found", { status: 404 });
+        return new Response(Bun.file(real));
       } catch {
         return new Response("not found", { status: 404 });
       }
