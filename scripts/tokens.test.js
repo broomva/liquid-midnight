@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const tokens = JSON.parse(readFileSync(`${ROOT}tokens/tokens.json`, "utf8"));
 const css = readFileSync(`${ROOT}tokens/tokens.css`, "utf8");
 const hue = (v) => Number(v.match(/oklch\(\s*[\d.]+\s+[\d.]+\s+([\d.]+)/)[1]);

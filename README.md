@@ -20,20 +20,25 @@ A reusable style system distilled from the Agent Workspaces keynote, its reels, 
 
 ```bash
 bun install
+bunx playwright install chromium   # once: the browser used by `render` and `verify`
 bun run serve      # http://localhost:4317/specimen/  (?mode=day, ?t=6 for a deterministic frame)
 bun run render     # re-render docs/renders/*.png (night + day) with headless Chromium
 bun run tokens     # regenerate tokens.css + DESIGN.md tables after editing tokens.json
 bun run check      # tokens up to date, Biome, tests
 ```
 
+Copy (or vendor) the repo into your site as `liquid-midnight/`, serve it over http (ES modules do not load from `file://`), then:
+
 ```html
-<link rel="stylesheet" href="liquid-midnight/tokens/tokens.css">
-<link rel="stylesheet" href="liquid-midnight/css/materials.css">
+<link rel="stylesheet" href="./liquid-midnight/tokens/tokens.css">
+<link rel="stylesheet" href="./liquid-midnight/css/materials.css">
 <div class="lm-glass lm-card"><span class="lm-tag"><b></b>Layer 01</span><h3 class="lm-card-title">Primer</h3></div>
 <script type="module">
-  import { use, readColors, createLoop, asciiBackground, orb, metalRing } from "liquid-midnight/kit";
+  import { use, readColors, createLoop, asciiBackground, orb, metalRing } from "./liquid-midnight/kit/index.js";
 </script>
 ```
+
+With a bundler, the package exports `liquid-midnight/kit`, `liquid-midnight/tokens.css` and `liquid-midnight/materials.css`. The `liquid-midnight` skill in [broomva/skills](https://github.com/broomva/skills) installs the same assets with a starter scene.
 
 ## Renders
 

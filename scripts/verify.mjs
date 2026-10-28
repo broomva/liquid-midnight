@@ -185,6 +185,14 @@ try {
   });
   check(direct === (await snap()), "renderAt(3) is identical reached directly and via 5 -> 3");
 
+  // 1b. a ?t=0 capture shows the selected segment (thumbs are laid out before the first paint)
+  const t0 = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  await t0.goto(`${base}?t=0`);
+  await t0.waitForFunction(() => window.__ready === true);
+  const thumb0 = await t0.evaluate(() => document.querySelector("#modeSeg .lm-thumb").getBoundingClientRect().width);
+  check(thumb0 > 20, `a ?t=0 capture lays out the segmented thumb (${thumb0.toFixed(0)} px)`);
+  await t0.close();
+
   // 2. reduced motion freezes the live loop (close the first page so two renderers don't compete for swiftshader)
   await page.close();
   const rm = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
@@ -203,6 +211,11 @@ try {
   check(settled.counters.join() === "128,096,032", `reduced motion shows the settled state, not t=0 (counters ${settled.counters.join(" ")})`);
   check(settled.thumb > 20, `reduced motion: the segmented thumb is laid out (${settled.thumb.toFixed(0)} px)`);
   check(settled.motionPressed === "false", "the Motion control reflects the OS reduced-motion setting");
+  const ambient = await rm.evaluate(() => ({
+    attr: document.documentElement.dataset.lmMotion,
+    anim: getComputedStyle(document.querySelector(".lm-ambient i")).animationName,
+  }));
+  check(ambient.attr === "off" && ambient.anim === "none", `the ambient light stops with the kit's motion switch (${ambient.attr}, ${ambient.anim})`);
   // a resize under reduced motion must repaint the (cleared) background
   // mute the page's context-restore repaint so only the resize handler can repaint (otherwise it masks a regression)
   await rm.evaluate(async () => {

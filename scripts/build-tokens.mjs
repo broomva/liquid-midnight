@@ -1,8 +1,10 @@
 // Build tokens/tokens.css and the DESIGN.md token tables from tokens/tokens.json (the single source of truth).
 // `bun scripts/build-tokens.mjs --check` fails if either generated output is stale.
-import { readFileSync, writeFileSync } from "node:fs";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+import { readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const tokens = JSON.parse(readFileSync(`${ROOT}tokens/tokens.json`, "utf8"));
 const check = process.argv.includes("--check");
 export { css as buildCss };

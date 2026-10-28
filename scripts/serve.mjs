@@ -1,9 +1,11 @@
 // Static server for the specimen (ES modules need http, not file://). bun run serve → http://localhost:4317/specimen/
 // Loopback only; serves only the public asset directories below, never dotfiles or the rest of the repo.
+
 import { realpathSync } from "node:fs";
 import { join, normalize, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PUBLIC = ["specimen", "tokens", "css", "kit", "fonts", "design/shaders", "docs"];
 
 export function resolvePublic(urlPath) {

@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
+import { fileURLToPath } from "node:url";
 import { resolvePublic } from "./serve.mjs";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 test("serves public asset directories", () => {
   expect(resolvePublic("/specimen/")).toMatch(/specimen\/index\.html$/);

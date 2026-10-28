@@ -75,7 +75,7 @@ OKLCH is canonical. Hex values are sRGB fallbacks, emitted first in `tokens/toke
 | `--lm-cyan` | `oklch(0.81 0.12 225)` | `#5cd1fb` | `oklch(0.6 0.13 225)` | `#008fba` | Caustics, secondary flows, glass bottom edge. |
 | `--lm-green` | `oklch(0.76 0.19 148)` | `#43d066` | `oklch(0.6 0.17 148)` | `#0e9a3f` | Retained / positive / write path. |
 | `--lm-coral` | `oklch(0.67 0.21 28)` | `#fc5045` | `oklch(0.58 0.21 28)` | `#db2d27` | Loss / failure counters. |
-| `--lm-gold` | `oklch(0.86 0.12 88)` | `#f2cd6f` | `oklch(0.66 0.13 80)` | `#bb881a` | Proven, built or ledgered paths only; merge commits. |
+| `--lm-gold` | `oklch(0.86 0.12 88)` | `#f2cd6f` | `oklch(0.62 0.13 80)` | `#af7c00` | Proven, built or ledgered paths only; merge commits. |
 | `--lm-warm` | `oklch(0.79 0.16 65)` | `#ffa234` | `oklch(0.68 0.17 60)` | `#e27900` | Warnings, human attention. |
 | `--lm-glass` | `oklch(0.24 0.03 248 / 0.5)` | `#14212d80` | `oklch(1 0 0 / 0.56)` | `#ffffff8f` | Base glass tint (HUD glass). |
 | `--lm-glass-heavy` | `oklch(0.24 0.03 248 / 0.86)` | `#14212ddb` | `oklch(1 0 0 / 0.82)` | `#ffffffd1` | Reduced-transparency glass. |
@@ -101,6 +101,8 @@ Liquid-metal palette:
 ---
 
 ## 5. Materials (exact CSS: `css/materials.css`)
+
+The material recipes use literal `oklch()` colours (gradients and shadows with alpha), so they need an OKLCH-capable browser: Safari 15.4+, Chrome/Edge 111+, Firefox 113+. The tokens carry hex fallbacks; the materials do not, by choice (duplicating every gradient in hex would double the file for browsers this showcase style does not target).
 
 All rims share one mechanism:
 - a `::after` ring with 1.2 px padding;
@@ -175,6 +177,7 @@ All drift `ease-in-out infinite alternate`. In capture mode, freeze them or driv
   ORB.attach(canvas); ORB.begin(ctx); orb(x, y, r, C.blue, t); ORB.end();
   ```
   This batches every orb in one WebGL pass. Called outside a batch, `orb()` renders a 256² sprite. With no WebGL it calls `orb2d()`.
+- **Limits:** outside a batch, an orb renders through one shared 256² sprite, so a sprite orb larger than about 128 css px at 2× DPR is upscaled and softens. Batch large hero orbs. Batched orbs follow translation and uniform scale only: a rotated or non-uniformly scaled context is not supported (draw orbs before applying such transforms).
 - **Sizing:** the visible sphere radius is .62 r; the sprite spans ±1.7 sphere radii, so its side is 3.4 × the sphere radius (1.7 × its diameter). The batch layer is an absolutely positioned overlay at the canvas's content box, inserted right after it, so the canvas's offset parent must be positioned (e.g. a `position: relative` wrapper); a `position: fixed` canvas gets a fixed layer. Each source canvas gets its own layer, released when the canvas leaves the DOM, shadow roots included (or with `ORB.detach(cv)`). CSS transforms on the canvas are not followed: transform a wrapper that contains both, or skip `attach` and use the sprite path.
 - **Pencil:** `design/shaders/orb.glsl` is the same shader as a pen.dev shader fill. Use a **square** node whose side is 3.4 × the sphere radius you want; non-square nodes draw an ellipse.
 
@@ -292,9 +295,9 @@ Measured contrast (WCAG 2), text on ground and on surface:
 | blue | 7.6 | 6.9 | 4.5 | 4.8 |
 | green | 9.7 | 8.9 | **3.4** | 3.6 |
 | coral | 5.9 | 5.4 | 4.3 | 4.7 |
-| gold | 12.8 | 11.7 | **2.9** | 3.1 |
+| gold | 12.8 | 11.7 | 3.4 | 3.6 |
 
-- In day mode, use `t3`, green, coral and gold only for large text (≥ 24 px, 3:1) or with a label. For small metadata, put `t3` on `surface`.
+- In day mode, `green` and `gold` reach only 3:1 on the ground, so use them for large text (≥ 24 px) or as non-text marks; never for body or small labels. `t3` and `coral` sit just under 4.5:1 on the day ground: large text there, or small text on `surface` (≥ 4.6:1). A label next to a colour does not make low-contrast text readable; it only stops colour being the sole carrier of meaning.
 - Glass sits on a live field, so check contrast against the *darkest and brightest* frames. Keep text on glass at t1/t2. If the field gets bright, raise the tint, do not shrink the type.
 - **Reduced transparency:** glass becomes `--lm-glass-heavy` with no backdrop filter (restated last in the CSS, so no material beats it).
 - **More contrast:** opaque `--lm-surface`, a 1.5 px `t2` outline, and no rim.

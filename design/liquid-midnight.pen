@@ -2248,7 +2248,7 @@
                           "id": "tLYcZ",
                           "name": "Token",
                           "fill": "$t3",
-                          "content": "--lm-gold  oklch(0.66 0.13 80)",
+                          "content": "--lm-gold  oklch(0.62 0.13 80)",
                           "fontFamily": "$font-mono",
                           "fontSize": 10.5,
                           "fontWeight": "normal"
@@ -10577,7 +10577,7 @@
           }
         },
         {
-          "value": "#bb881a",
+          "value": "#af7c00",
           "theme": {
             "mode": "day"
           }

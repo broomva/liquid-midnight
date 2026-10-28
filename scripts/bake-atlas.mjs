@@ -1,5 +1,6 @@
 // Bake the ASCII ramp into design/shaders/ascii-atlas.png (white glyphs on transparent) for the pen.dev ASCII shader.
 // Same geometry as kit/ascii.js atlas(): cell = ceil(fs*.62) x ceil(fs*1.2), JetBrains Mono 500.
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { serve } from "./serve.mjs";
 
@@ -30,7 +31,7 @@ try {
     },
     [RAMP, FS],
   );
-  await Bun.write(new URL("../design/shaders/ascii-atlas.png", import.meta.url).pathname, Buffer.from(data.split(",")[1], "base64"));
+  await Bun.write(fileURLToPath(new URL("../design/shaders/ascii-atlas.png", import.meta.url)), Buffer.from(data.split(",")[1], "base64"));
   console.log("baked design/shaders/ascii-atlas.png");
 } finally {
   await browser.close();

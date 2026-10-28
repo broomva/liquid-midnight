@@ -1,10 +1,12 @@
 // Render the specimen to docs/renders/: one PNG per section, night and day, at a fixed t (frames are pure in t).
 // bun run render [-- --t 6]
+
 import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { serve } from "./serve.mjs";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const tArg = process.argv.indexOf("--t");
 const T = tArg > 0 ? Number(process.argv[tArg + 1]) : 6;
 if (!Number.isFinite(T) || T < 0 || T > 3600) {
@@ -28,10 +30,16 @@ try {
       const el = page.locator(`#${id}`);
       await el.scrollIntoViewIfNeeded();
       await page.evaluate((t) => window.renderAt(t), T);
-      const b = await el.boundingBox();
+      // the whole section, however tall: document-relative clip on a full-page capture, with the fixed HUD hidden
+      const b = await el.evaluate((n) => {
+        const r = n.getBoundingClientRect();
+        return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height };
+      });
       const pad = 40;
+      await page.addStyleTag({ content: ".bar{visibility:hidden !important}" });
       await page.screenshot({
         path: `${OUT}/${mode}-${id.slice(2)}.png`,
+        fullPage: true,
         clip: { x: Math.max(0, b.x - pad), y: Math.max(0, b.y - pad), width: b.width + pad * 2, height: b.height + pad },
       });
       console.log(`rendered ${mode}-${id.slice(2)}.png`);
