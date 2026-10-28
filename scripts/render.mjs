@@ -26,6 +26,7 @@ try {
     page.on("console", (m) => m.type() === "error" && errors.push(`${mode}: ${m.text()}`));
     await page.goto(`http://localhost:${server.port}/specimen/?t=${T}&mode=${mode}`);
     await page.waitForFunction(() => window.__ready === true, null, { timeout: 30000 });
+    await page.addStyleTag({ content: ".bar{visibility:hidden !important}" }); // the fixed HUD stays out of section captures
     for (const id of ["s-hero", "s-palette", "s-type", "s-materials", "s-canvas", "s-breaker", "s-motion", "s-formats"]) {
       const el = page.locator(`#${id}`);
       await el.scrollIntoViewIfNeeded();
@@ -36,7 +37,6 @@ try {
         return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height };
       });
       const pad = 40;
-      await page.addStyleTag({ content: ".bar{visibility:hidden !important}" });
       await page.screenshot({
         path: `${OUT}/${mode}-${id.slice(2)}.png`,
         fullPage: true,

@@ -45,12 +45,13 @@ test("rejects foreign Host headers (DNS rebinding) and non-GET methods", async (
 });
 
 test("a symlink inside a public directory cannot escape it", async () => {
-  const { symlinkSync, unlinkSync, writeFileSync, mkdtempSync } = await import("node:fs");
+  const { symlinkSync, unlinkSync, writeFileSync, mkdtempSync, rmSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const { serve } = await import("./serve.mjs");
   const secret = `${mkdtempSync(`${tmpdir()}/lm-sec-`)}/secret.txt`;
   writeFileSync(secret, "secret");
   const link = `${ROOT}specimen/zz-leak-test.txt`;
+  rmSync(link, { force: true }); // a crashed earlier run must not wedge this test
   symlinkSync(secret, link);
   const s = serve(0);
   try {
