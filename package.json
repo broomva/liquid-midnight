@@ -23,7 +23,8 @@
     "serve": "bun scripts/serve.mjs",
     "render": "bun scripts/render.mjs",
     "test": "bun test",
-    "check": "bun scripts/build-tokens.mjs --check && biome check . && bun test"
+    "check": "bun scripts/build-tokens.mjs --check && biome check . && bun test",
+    "verify": "bun scripts/verify.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.8",

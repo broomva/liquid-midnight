@@ -19,15 +19,23 @@ export function readColors(el = document.documentElement) {
     C[k] = s.getPropertyValue(`--lm-${k}`).trim();
   for (const k of ["steel", "shine", "fringeA", "fringeB", "fringeC"])
     C[k] = s.getPropertyValue(`--lm-metal-${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`).trim();
-  C.day = el.closest?.("[data-lm-mode=day]") != null || el.dataset?.lmMode === "day";
+  // nearest mode wins: a night region nested in a day page reads as night
+  C.day = (el.closest?.("[data-lm-mode]")?.dataset.lmMode ?? "night") === "day";
   return C;
 }
 
 /** Reduced motion: springs snap to target, the rim angle and ASCII flow freeze. */
-export let MOTION = typeof matchMedia === "function" ? !matchMedia("(prefers-reduced-motion: reduce)").matches : true;
+const RMQ = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+export let MOTION = RMQ ? !RMQ.matches : true;
+let motionPinned = false;
+/** Pin motion on or off (overrides the OS setting until setMotion(null) hands control back to it). */
 export function setMotion(on) {
-  MOTION = !!on;
+  motionPinned = on !== null && on !== undefined;
+  MOTION = motionPinned ? !!on : RMQ ? !RMQ.matches : true;
 }
+RMQ?.addEventListener?.("change", (e) => {
+  if (!motionPinned) MOTION = !e.matches;
+});
 
 export const TAU = Math.PI * 2;
 export const lerp = (a, b, t) => a + (b - a) * t;
@@ -143,10 +151,26 @@ export function along(p, u, off = 0) {
   return [x - (dy / L) * off, y + (dx / L) * off];
 }
 
+/* colour with alpha. Handles oklch() (the canonical tokens) and the #rgb / #rrggbb / #rrggbbaa hex fallbacks, so the kit
+   keeps its alpha stops in browsers that only get the hex tokens. Anything else is returned unchanged (alpha ignored). */
+function hexAlpha(c, a) {
+  let h = c.slice(1);
+  if (h.length === 3 || h.length === 4) h = [...h].map((x) => x + x).join("");
+  if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(h)) return null;
+  const n = (i) => Number.parseInt(h.slice(i, i + 2), 16);
+  const base = h.length === 8 ? n(6) / 255 : 1;
+  return `rgba(${n(0)}, ${n(2)}, ${n(4)}, ${+(base * a).toFixed(4)})`;
+}
+export const al = (c, a) => {
+  if (c.startsWith("oklch(") && !c.includes("/")) return c.replace(/\)$/, ` / ${a})`);
+  if (c.startsWith("#")) return hexAlpha(c, a) ?? c;
+  return c;
+};
 /* fade to the same hue at zero alpha: 'transparent' is black and greys out halos on light surfaces */
-export const clear = (c) => (c.startsWith("oklch(") && !c.includes("/") ? c.replace(/\)$/, " / 0)") : "transparent");
-/** colour with alpha, for oklch tokens */
-export const al = (c, a) => (c.startsWith("oklch(") && !c.includes("/") ? c.replace(/\)$/, ` / ${a})`) : c);
+export const clear = (c) => {
+  const z = al(c, 0);
+  return z === c ? "transparent" : z;
+};
 
 export function glow(x, y, r, c, a = 0.4) {
   const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -183,8 +207,9 @@ export function T(s, x, y, o = {}) {
 /** marching dashes: reserved for the active / build route */
 export function march(p, c, a, t, lw = 1.6, speed = 28) {
   if (a <= 0.004) return;
+  const g = ctx.globalAlpha;
   ctx.strokeStyle = c;
-  ctx.globalAlpha = a;
+  ctx.globalAlpha = g * a;
   ctx.lineWidth = lw;
   ctx.setLineDash([6, 8]);
   ctx.lineDashOffset = -t * speed;
@@ -194,7 +219,7 @@ export function march(p, c, a, t, lw = 1.6, speed = 28) {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.lineDashOffset = 0;
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = g;
 }
 export function rrect(x, y, w, h, r, stroke, fill, lw = 1.3) {
   ctx.beginPath();
@@ -254,7 +279,7 @@ export class Flow {
   /** integrate only (fixed-step loops): spawn by rate, move by v, recycle at u ≥ 1 unless end(q) returns false */
   advance(dt, end) {
     this.acc += dt * this.rate;
-    while (this.acc > 1) {
+    while (this.acc >= 1) {
       this.acc--;
       const q = this.mk();
       if (q) this.p.push(q);
@@ -280,7 +305,7 @@ export class Flow {
   /** the deck's combined form: integrate and paint in one call */
   run(dt, path, draw, end) {
     this.acc += dt * this.rate;
-    while (this.acc > 1) {
+    while (this.acc >= 1) {
       this.acc--;
       const q = this.mk();
       if (q) this.p.push(q);

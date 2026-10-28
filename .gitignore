@@ -1,2 +1,4 @@
 node_modules/
 .DS_Store
+
+# Pen writes a per-file app token on save; never commit it (public repo)

@@ -7,6 +7,10 @@ import { serve } from "./serve.mjs";
 const ROOT = new URL("..", import.meta.url).pathname;
 const tArg = process.argv.indexOf("--t");
 const T = tArg > 0 ? Number(process.argv[tArg + 1]) : 6;
+if (!Number.isFinite(T) || T < 0 || T > 3600) {
+  console.error(`--t must be a finite number of seconds in [0, 3600], got ${process.argv[tArg + 1]}`);
+  process.exit(2);
+}
 const OUT = `${ROOT}docs/renders`;
 mkdirSync(OUT, { recursive: true });
 

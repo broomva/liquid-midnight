@@ -3,13 +3,30 @@
 // function of t. State that integrates (springs, particles) is advanced in fixed 1/60 s steps from t = 0, the PRNG is
 // reseeded at t = 0, and the rim angle is derived from t, so window.renderAt(t) paints the same pixels on every machine
 // and a headless browser can render any frame to video.
+// Reduced motion (deck line 2786: the clock stops): the live loop holds t still and keeps repainting it; renderAt still
+// seeks, because capture is an explicit request for that frame.
 import { MOTION, reseed } from "./core.js";
 
 export const STEP = 1 / 60;
+/** Longest seek renderAt accepts (s). A seek replays every fixed step from 0, so an unbounded t never returns. */
+export const MAX_T = 3600;
 
-/** Set the travelling liquid-metal angle for every .lm-glass / .lm-capsule / .lm-ring rim. 40°/s by default. */
-export function setUA(t, el = document.documentElement, degPerSecond = 40) {
+/** Rim speed from the token (--lm-ua-speed, generated from tokens.json motion.ua.degPerSecond); 40°/s if unset. */
+export function uaSpeed(el = document.documentElement) {
+  const v = Number.parseFloat(getComputedStyle(el).getPropertyValue("--lm-ua-speed"));
+  return Number.isFinite(v) ? v : 40;
+}
+
+/** Set the travelling liquid-metal angle for every .lm-glass / .lm-capsule / .lm-ring rim. */
+export function setUA(t, el = document.documentElement, degPerSecond = uaSpeed(el)) {
   el.style.setProperty("--ua", `${((t * degPerSecond) % 360).toFixed(1)}deg`);
+}
+
+/** Validate a requested time: finite, ≥ 0, ≤ MAX_T. Throws otherwise. */
+export function checkTime(t) {
+  const n = Number(t);
+  if (!Number.isFinite(n) || n < 0 || n > MAX_T) throw new RangeError(`renderAt: t must be a finite number in [0, ${MAX_T}], got ${t}`);
+  return n;
 }
 
 /**
@@ -42,7 +59,7 @@ export function createLoop({ init = () => {}, step = () => {}, paint = () => {},
     },
     /** deterministic seek: replays fixed steps from 0 when going backwards */
     renderAt(target) {
-      const N = Math.max(0, Math.round(target / STEP));
+      const N = Math.round(checkTime(target) / STEP);
       if (N < n) reset();
       while (n < N) {
         step(STEP, t);
@@ -51,19 +68,22 @@ export function createLoop({ init = () => {}, step = () => {}, paint = () => {},
       }
       frame(t);
     },
-    /** real-time preview: same fixed steps, driven by requestAnimationFrame */
+    /** real-time preview: same fixed steps, driven by requestAnimationFrame; the clock holds under reduced motion */
     start() {
       if (raf) return;
       reset();
       last = performance.now();
       const tick = (now) => {
-        acc += Math.min(0.1, (now - last) / 1000);
+        const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
-        while (acc >= STEP) {
-          step(STEP, t);
-          t += STEP;
-          n++;
-          acc -= STEP;
+        if (MOTION) {
+          acc += dt;
+          while (acc >= STEP) {
+            step(STEP, t);
+            t += STEP;
+            n++;
+            acc -= STEP;
+          }
         }
         frame(t);
         raf = requestAnimationFrame(tick);

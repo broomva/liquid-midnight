@@ -41,8 +41,9 @@ void main() {
   float g = sin(c.y * .015 - t * .11 + sin(c.x * .005 + t * .07) * 2.2) * .5 + .5;
   float v = min(.72, pow(f * g, 2.2) * 1.25);
   float idx = v <= .02 ? 0. : min(10., 1. + floor(v * 10.));
-  // the kit draws an 11px glyph (7 x 14 box) at the top-left of each 15px cell: keep those proportions, no stretching
-  vec2 local = (px - c) / (u_cell * vec2(7. / 15., 14. / 15.));
+  // the kit draws an 11px glyph (7 px wide) at the top-left of each 15px cell; the baked atlas cell is 28 x 53, so the
+  // glyph box is 7/15 of the cell wide and (7/15)/(28/53) tall: atlas proportions, no stretching
+  vec2 local = (px - c) / (u_cell * vec2(7. / 15., (7. / 15.) * (53. / 28.)));
   float inside = step(local.x, 1.) * step(local.y, 1.);
   vec2 uv = vec2((idx + clamp(local.x, 0., 1.)) / 11., 1. - clamp(local.y, 0., 1.));
   float a = texture2D(u_atlas, uv).a * u_alpha * inside;

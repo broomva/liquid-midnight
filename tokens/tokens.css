@@ -60,6 +60,40 @@
   }
 }
 
+[data-lm-tone=graphite] {
+  --lm-deep: #090a0c;
+  --lm-surface: #131518;
+  --lm-elev: #1c1e21;
+  --lm-t2: #c5c7cb;
+  --lm-t3: #8c8f94;
+}
+@supports (color: oklch(0 0 0)) {
+  [data-lm-tone=graphite] {
+    --lm-deep: oklch(0.145 0.004 255);
+    --lm-surface: oklch(0.195 0.006 255);
+    --lm-elev: oklch(0.235 0.007 255);
+    --lm-t2: oklch(0.83 0.006 255);
+    --lm-t3: oklch(0.65 0.008 255);
+  }
+}
+
+[data-lm-tone=abyss] {
+  --lm-deep: #000d17;
+  --lm-surface: #001925;
+  --lm-elev: #05232f;
+  --lm-t2: #bbcad2;
+  --lm-t3: #7d939e;
+}
+@supports (color: oklch(0 0 0)) {
+  [data-lm-tone=abyss] {
+    --lm-deep: oklch(0.15 0.036 230);
+    --lm-surface: oklch(0.2 0.04 230);
+    --lm-elev: oklch(0.24 0.042 230);
+    --lm-t2: oklch(0.83 0.02 228);
+    --lm-t3: oklch(0.65 0.03 228);
+  }
+}
+
 [data-lm-mode=day] {
   --lm-deep: #f2f5f8;
   --lm-surface: #fcfdff;
@@ -116,40 +150,6 @@
     --lm-metal-fringe-a: oklch(0.6 0.14 225);
     --lm-metal-fringe-b: oklch(0.6 0.18 350);
     --lm-metal-fringe-c: oklch(0.7 0.13 80);
-  }
-}
-
-[data-lm-tone=graphite] {
-  --lm-deep: #090a0c;
-  --lm-surface: #131518;
-  --lm-elev: #1c1e21;
-  --lm-t2: #c5c7cb;
-  --lm-t3: #8c8f94;
-}
-@supports (color: oklch(0 0 0)) {
-  [data-lm-tone=graphite] {
-    --lm-deep: oklch(0.145 0.004 255);
-    --lm-surface: oklch(0.195 0.006 255);
-    --lm-elev: oklch(0.235 0.007 255);
-    --lm-t2: oklch(0.83 0.006 255);
-    --lm-t3: oklch(0.65 0.008 255);
-  }
-}
-
-[data-lm-tone=abyss] {
-  --lm-deep: #000d17;
-  --lm-surface: #001925;
-  --lm-elev: #05232f;
-  --lm-t2: #bbcad2;
-  --lm-t3: #7d939e;
-}
-@supports (color: oklch(0 0 0)) {
-  [data-lm-tone=abyss] {
-    --lm-deep: oklch(0.15 0.036 230);
-    --lm-surface: oklch(0.2 0.04 230);
-    --lm-elev: oklch(0.24 0.042 230);
-    --lm-t2: oklch(0.83 0.02 228);
-    --lm-t3: oklch(0.65 0.03 228);
   }
 }
 

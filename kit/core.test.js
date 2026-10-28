@@ -48,3 +48,20 @@ test("bézier helpers hit their endpoints and beats clamp", () => {
   expect(beat(5, 0, 1)).toBe(1);
   expect(clamp(2, 0, 1)).toBe(1);
 });
+
+import { al, clear, Flow } from "./core.js";
+
+test("Flow spawns on the exact fixed-step boundary (rate 60, dt 1/60)", () => {
+  const f = new Flow(60, () => ({ u: 0, v: 0.1 }));
+  f.advance(1 / 60);
+  expect(f.p.length).toBe(1);
+});
+
+test("al/clear keep alpha for hex fallbacks as well as oklch", () => {
+  expect(al("oklch(0.7 0.1 250)", 0.5)).toBe("oklch(0.7 0.1 250 / 0.5)");
+  expect(al("#336699", 0.5)).toBe("rgba(51, 102, 153, 0.5)");
+  expect(al("#369", 0.25)).toBe("rgba(51, 102, 153, 0.25)");
+  expect(al("#33669980", 0.5)).toBe("rgba(51, 102, 153, 0.251)");
+  expect(clear("#336699")).toBe("rgba(51, 102, 153, 0)");
+  expect(clear("rebeccapurple")).toBe("transparent");
+});

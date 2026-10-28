@@ -45,3 +45,20 @@ test("every colour token is emitted with a hex fallback and an OKLCH value", () 
 test("reel safe zone matches the platform contract", () => {
   expect(tokens.format.reel.safe).toEqual({ top: 250, bottom: 480, left: 64, right: 150 });
 });
+
+test("day mode beats a tone: tone blocks are emitted before the day block in both layers", () => {
+  const dayHex = css.indexOf("[data-lm-mode=day] {");
+  const dayOk = css.indexOf("  [data-lm-mode=day] {");
+  for (const tone of Object.keys(tokens.color.tone)) {
+    expect(css.indexOf(`[data-lm-tone=${tone}] {`)).toBeLessThan(dayHex);
+    expect(css.indexOf(`  [data-lm-tone=${tone}] {`)).toBeLessThan(dayOk);
+  }
+});
+
+test("build-tokens has no side effects on import and its hex matches known values", async () => {
+  const { oklchToHex } = await import("./build-tokens.mjs");
+  expect(oklchToHex("oklch(1 0 0)")).toBe("#ffffff");
+  expect(oklchToHex("oklch(0 0 0)")).toBe("#000000");
+  expect(oklchToHex("oklch(0.71 0.15 252)")).toBe("#54a5fc");
+  expect(oklchToHex("oklch(1 0 0 / 0.5)")).toBe("#ffffff80");
+});

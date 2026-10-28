@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 const ROOT = new URL("..", import.meta.url).pathname;
 const tokens = JSON.parse(readFileSync(`${ROOT}tokens/tokens.json`, "utf8"));
 const check = process.argv.includes("--check");
+export { css as buildCss };
 
 // OKLCH -> sRGB hex (Björn Ottosson's OKLab matrices), clipped to gamut; alpha becomes the 4th byte.
 export function oklchToHex(css) {
@@ -47,8 +48,9 @@ function css() {
     "/* Hex first (fallback), OKLCH inside @supports (canonical). Modes: night (default), day/paper via [data-lm-mode=day]. */",
     "",
     block(":root, [data-lm-mode=night]", [...Object.entries(color.night), ...Object.entries(color.metal.night).map(([k, t]) => [`metal-${k}`, t])]),
-    block("[data-lm-mode=day]", [...Object.entries(color.day), ...Object.entries(color.metal.day).map(([k, t]) => [`metal-${k}`, t])]),
+    // tones override the night grounds only; they come BEFORE day so a day page keeps its paper grounds (deck :33-37)
     ...Object.entries(color.tone).map(([name, set]) => block(`[data-lm-tone=${name}]`, Object.entries(set))),
+    block("[data-lm-mode=day]", [...Object.entries(color.day), ...Object.entries(color.metal.day).map(([k, t]) => [`metal-${k}`, t])]),
     ":root {",
     ...Object.entries(font).map(([k, f]) => `  --lm-font-${k}: ${f.family};`),
     ...Object.entries(radius).map(([k, r]) => `  --lm-radius-${kebab(k)}: ${r}px;`),
@@ -85,24 +87,26 @@ function tables() {
   ].join("\n");
 }
 
-const cssOut = css();
-const designPath = `${ROOT}DESIGN.md`;
-const design = readFileSync(designPath, "utf8");
-const re = /<!-- tokens:start[\s\S]*?<!-- tokens:end -->/;
-if (!re.test(design)) throw new Error("DESIGN.md is missing the <!-- tokens:start --> … <!-- tokens:end --> markers");
-const designOut = design.replace(re, tables());
+if (import.meta.main) {
+  const cssOut = css();
+  const designPath = `${ROOT}DESIGN.md`;
+  const design = readFileSync(designPath, "utf8");
+  const re = /<!-- tokens:start[\s\S]*?<!-- tokens:end -->/;
+  if (!re.test(design)) throw new Error("DESIGN.md is missing the <!-- tokens:start --> … <!-- tokens:end --> markers");
+  const designOut = design.replace(re, tables());
 
-if (check) {
-  const stale = [];
-  if (readFileSync(`${ROOT}tokens/tokens.css`, "utf8") !== cssOut) stale.push("tokens/tokens.css");
-  if (design !== designOut) stale.push("DESIGN.md token tables");
-  if (stale.length) {
-    console.error(`stale: ${stale.join(", ")}. Run \`bun run tokens\`.`);
-    process.exit(1);
+  if (check) {
+    const stale = [];
+    if (readFileSync(`${ROOT}tokens/tokens.css`, "utf8") !== cssOut) stale.push("tokens/tokens.css");
+    if (design !== designOut) stale.push("DESIGN.md token tables");
+    if (stale.length) {
+      console.error(`stale: ${stale.join(", ")}. Run \`bun run tokens\`.`);
+      process.exit(1);
+    }
+    console.log("tokens: up to date");
+  } else {
+    writeFileSync(`${ROOT}tokens/tokens.css`, cssOut);
+    writeFileSync(designPath, designOut);
+    console.log("tokens: wrote tokens/tokens.css and DESIGN.md tables");
   }
-  console.log("tokens: up to date");
-} else {
-  writeFileSync(`${ROOT}tokens/tokens.css`, cssOut);
-  writeFileSync(designPath, designOut);
-  console.log("tokens: wrote tokens/tokens.css and DESIGN.md tables");
 }

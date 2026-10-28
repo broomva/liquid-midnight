@@ -57,6 +57,8 @@ export function fringe(p, c, t, seed) {
  *  In metal mode the strands carry the travelling specular, a bright core fringe and ±1.2 px spectral fringes. */
 export function ribbon(p, n, s0, s1, cA, cB, a, t, amp = 5, lw = 1, dash) {
   if (a <= 0.004) return;
+  const g0 = ctx.globalAlpha; // the caller's alpha: everything below multiplies it and it is restored at the end
+  a *= g0;
   const dx = p[3][0] - p[0][0];
   const dy = p[3][1] - p[0][1];
   const L = Math.hypot(dx, dy) || 1;
@@ -110,7 +112,7 @@ export function ribbon(p, n, s0, s1, cA, cB, a, t, amp = 5, lw = 1, dash) {
     }
     ctx.globalCompositeOperation = op;
   }
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = g0;
 }
 
 /** Liquid-metal ring (ellipse R × ry) with two travelling speculars (cos^10 and cos^16 lobes, the second at 0.63×

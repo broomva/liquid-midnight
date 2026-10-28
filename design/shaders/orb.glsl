@@ -1,6 +1,6 @@
 // Liquid Midnight · glass plasma orb as a pen.dev shader fill. Port of kit/orb-shaders.js (deck/index.html @187972f
-// lines 1470-1488): per-orb attributes became uniforms; the sprite spans ±1.7 sphere radii, so size the node 1.7/0.62 = 2.74x
-// the visible sphere. Colours: A = filaments/caustics (base colour lifted 40% toward cyan), B = body (base x0.8).
+// lines 1470-1488): per-orb attributes became uniforms. The node spans ±1.7 sphere radii: use a SQUARE node whose side is
+// 3.4x the sphere radius (non-square nodes draw an ellipse). Output is premultiplied alpha, like the kit's canvas. Colours: A = filaments/caustics (base colour lifted 40% toward cyan), B = body (base x0.8). Defaults = kit colors(--lm-blue).
 precision highp float;
 /** @resolution */
 uniform vec2 u_resolution;
@@ -9,13 +9,13 @@ uniform float u_time;
 /**
  * @label Filament colour (A)
  * @color
- * @default #8ccbff
+ * @default #5dbbfd
  */
 uniform vec3 uA;
 /**
  * @label Body colour (B)
  * @color
- * @default #3a7fd0
+ * @default #4384d6
  */
 uniform vec3 uB;
 /**

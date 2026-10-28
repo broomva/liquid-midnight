@@ -202,8 +202,8 @@ export const ORB = (() => {
     }
     return SR;
   };
-  let LR = null;
-  let layer = null;
+  /* one batch layer + renderer per source canvas, so several canvases can batch in the same frame */
+  const layers = new Map();
   let target = null;
   const queue = [];
   return {
@@ -215,17 +215,28 @@ export const ORB = (() => {
     get ok() {
       return spriteRenderer().ready();
     },
-    /** Stack the batch layer directly after canvas `cv` (same size). Call once per frame before begin(). */
+    /** Overlay a WebGL layer exactly on canvas `cv` (same pixel size, absolutely positioned at its offset box, inserted
+     *  right after it so it stacks above the canvas and below later siblings such as glass cards). Call once per frame
+     *  before begin(); it is cheap when nothing changed. */
     attach(cv) {
-      if (!layer) {
-        layer = document.createElement("canvas");
+      let e = layers.get(cv);
+      if (!e) {
+        const layer = document.createElement("canvas");
         layer.className = "lm-orb-layer";
         layer.setAttribute("aria-hidden", "true");
-        LR = renderer(layer);
+        e = { layer, LR: renderer(layer) };
+        layers.set(cv, e);
       }
+      const { layer } = e;
       if (layer.previousElementSibling !== cv) cv.after(layer);
-      for (const k of ["position", "left", "top", "width", "height", "inset", "pointerEvents"]) layer.style[k] = getComputedStyle(cv)[k];
-      layer.style.pointerEvents = "none";
+      const st = layer.style;
+      st.position = "absolute";
+      st.pointerEvents = "none";
+      st.margin = "0";
+      st.left = `${cv.offsetLeft}px`;
+      st.top = `${cv.offsetTop}px`;
+      st.width = `${cv.offsetWidth}px`;
+      st.height = `${cv.offsetHeight}px`;
       if (layer.width !== cv.width || layer.height !== cv.height) {
         layer.width = cv.width;
         layer.height = cv.height;
@@ -233,17 +244,19 @@ export const ORB = (() => {
       return layer;
     },
     begin(c2d) {
-      target = LR?.ready() ? c2d : null;
+      const e = layers.get(c2d.canvas);
+      target = e?.LR.ready() ? { c2d, e } : null;
       queue.length = 0;
     },
     batching(c2d) {
-      return target !== null && c2d === target;
+      return target !== null && c2d === target.c2d;
     },
     push(o) {
       queue.push(o);
     },
     end() {
       if (!target) return;
+      const { layer, LR } = target.e;
       const n = queue.length;
       const data = new Float32Array(n * 6 * F);
       const W = layer.width;

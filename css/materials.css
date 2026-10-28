@@ -519,12 +519,15 @@
 }
 @media (prefers-contrast: more) {
   .lm-glass,
-  .lm-capsule {
+  .lm-capsule,
+  [data-lm-mode="day"] .lm-glass.lm-gel,
+  .lm-orb-button {
     background: var(--lm-surface) !important;
     box-shadow: 0 0 0 1.5px var(--lm-t2) !important;
   }
   .lm-glass::after,
-  .lm-capsule::after {
+  .lm-capsule::after,
+  .lm-ring::after {
     display: none;
   }
 }
