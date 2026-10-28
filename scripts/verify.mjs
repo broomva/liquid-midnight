@@ -254,6 +254,6 @@ try {
   server.stop(true);
 }
 if (fails.length) {
-  console.error(`\n${fails.length} failure(s)`);
+  console.error(`\n${fails.length} failure(s):\n  ${fails.join("\n  ")}`);
   process.exit(1);
 }
