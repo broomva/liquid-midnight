@@ -65,3 +65,11 @@ test("al/clear keep alpha for hex fallbacks as well as oklch", () => {
   expect(clear("#336699")).toBe("rgba(51, 102, 153, 0)");
   expect(clear("rebeccapurple")).toBe("transparent");
 });
+
+test("Flow does not lose spawns to floating-point accumulation (rates 4, 6, 18 over 10 s of 1/60 steps)", () => {
+  for (const rate of [4, 6, 18]) {
+    const f = new Flow(rate, () => ({ u: 0, v: 0.001 }));
+    for (let i = 0; i < 600; i++) f.advance(1 / 60);
+    expect(f.p.length).toBe(rate * 10);
+  }
+});

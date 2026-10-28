@@ -23,3 +23,7 @@ test("refuses dotfiles, traversal, malformed escapes and the rest of the repo", 
 test("refuses dotfiles inside public directories", () => {
   for (const p of ["/docs/.env", "/kit/.hidden.js", "/specimen/.DS_Store"]) expect(resolvePublic(p)).toBeNull();
 });
+
+test("refuses NUL and control characters", () => {
+  for (const p of ["/kit/a%00b", "/kit/a%0Ab.js", "/specimen/%7F"]) expect(resolvePublic(p)).toBeNull();
+});

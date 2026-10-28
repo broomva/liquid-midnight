@@ -27,6 +27,30 @@ try {
     return { deep: s.getPropertyValue("--lm-deep").trim(), t1: s.getPropertyValue("--lm-t1").trim() };
   });
   check(/0\.968|#f2f5f8/.test(tone.deep) && /0\.22|#191b1d/.test(tone.t1), `day + graphite keeps paper ground (${tone.deep}) and dark text (${tone.t1})`);
+  // nested: day on <html>, a tone on a descendant (and the reverse) must still resolve to the day grounds
+  const nested = await page.evaluate(() => {
+    const html = document.documentElement;
+    delete html.dataset.lmTone;
+    document.body.dataset.lmTone = "graphite";
+    const main = document.querySelector("main");
+    main.dataset.lmTone = "abyss";
+    const s1 = getComputedStyle(document.body).getPropertyValue("--lm-deep").trim();
+    const s2 = getComputedStyle(main).getPropertyValue("--lm-deep").trim();
+    delete document.body.dataset.lmTone;
+    delete main.dataset.lmTone;
+    html.dataset.lmMode = "night";
+    html.dataset.lmTone = "graphite";
+    main.dataset.lmMode = "day";
+    const s3 = getComputedStyle(main).getPropertyValue("--lm-deep").trim();
+    delete html.dataset.lmTone;
+    delete main.dataset.lmMode;
+    html.dataset.lmMode = "day";
+    return [s1, s2, s3];
+  });
+  check(
+    nested.every((v) => /0\.968|#f2f5f8/.test(v)),
+    `day wins over tones on any element (${nested.join(" | ")})`,
+  );
 
   // 3. orb layers overlay their canvases
   const layers = await page.evaluate(() =>
@@ -39,6 +63,41 @@ try {
     }),
   );
   for (const l of layers) check(l.ok, `orb batch layer overlays #${l.id}`);
+
+  // 3b. layer lifecycle: unmounted canvases release their layers; a layer follows its canvas's opacity
+  const life = await page.evaluate(async () => {
+    const { ORB, orb, use, C } = await import("../kit/index.js");
+    const host = document.createElement("div");
+    host.style.position = "relative";
+    document.body.append(host);
+    for (let i = 0; i < 20; i++) {
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = 64;
+      host.append(cv);
+      const x = cv.getContext("2d");
+      use(x);
+      ORB.attach(cv);
+      ORB.begin(x);
+      orb(32, 32, 20, C.blue, 1);
+      ORB.end();
+      cv.remove();
+    }
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 64;
+    cv.style.opacity = "0.25";
+    host.append(cv);
+    ORB.attach(cv);
+    const op = cv.nextElementSibling.style.opacity;
+    const n = ORB.layers;
+    ORB.detach(cv);
+    host.remove();
+    return { n, op, after: ORB.layers, ok: ORB.ok };
+  });
+  check(
+    life.n <= 3 && life.after <= 2 && life.ok,
+    `orb layers are released on unmount (live ${life.n}, after detach ${life.after}, sprite renderer ok ${life.ok})`,
+  );
+  check(life.op === "0.25", `orb layer mirrors its canvas opacity (${life.op})`);
 
   // 4. determinism of renderAt
   const snap = () =>
@@ -64,6 +123,22 @@ try {
   await rm.waitForTimeout(1200);
   const b = await rm.evaluate(() => document.getElementById("diagCv").toDataURL());
   check(a === b, "reduced motion: the live diagram canvas holds still");
+  const settled = await rm.evaluate(() => ({
+    counters: ["cA", "cB", "cC"].map((id) => document.getElementById(id).textContent),
+    thumb: document.querySelector("#modeSeg .lm-thumb").getBoundingClientRect().width,
+    motionPressed: document.getElementById("motionBtn").getAttribute("aria-pressed"),
+  }));
+  check(settled.counters.join() === "128,096,032", `reduced motion shows the settled state, not t=0 (counters ${settled.counters.join(" ")})`);
+  check(settled.thumb > 20, `reduced motion: the segmented thumb is laid out (${settled.thumb.toFixed(0)} px)`);
+  check(settled.motionPressed === "false", "the Motion control reflects the OS reduced-motion setting");
+  await rm.click('#modeSeg button[data-mode="day"]');
+  await rm.waitForTimeout(150);
+  const moved = await rm.evaluate(() => {
+    const t = document.querySelector("#modeSeg .lm-thumb").getBoundingClientRect();
+    const b = document.querySelector('#modeSeg button[data-mode="day"]').getBoundingClientRect();
+    return Math.abs(t.left - b.left) < 2 && document.documentElement.dataset.lmMode === "day";
+  });
+  check(moved, "reduced motion: clicking Day snaps the thumb to it and switches the mode");
   const live = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   await live.goto(base);
   await live.waitForTimeout(800);

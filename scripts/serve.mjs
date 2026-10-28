@@ -12,6 +12,7 @@ export function resolvePublic(urlPath) {
   } catch {
     return null;
   }
+  if ([...path].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127)) return null; // NUL and control characters
   const rel = normalize(path).replace(/^[/\\]+/, "");
   const parts = rel.split(/[/\\]/);
   if (parts.some((p) => p === ".." || p.startsWith("."))) return null;
@@ -24,11 +25,20 @@ export function serve(port = Number(process.env.PORT) || 4317) {
   return Bun.serve({
     port,
     hostname: "127.0.0.1",
+    development: false, // never Bun's dev error page (it embeds paths and source)
     async fetch(req) {
-      const file = resolvePublic(new URL(req.url).pathname);
-      if (!file) return new Response("not found", { status: 404 });
-      const f = Bun.file(file);
-      return (await f.exists()) ? new Response(f) : new Response("not found", { status: 404 });
+      if (req.method !== "GET" && req.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+      try {
+        const file = resolvePublic(new URL(req.url).pathname);
+        if (!file) return new Response("not found", { status: 404 });
+        const f = Bun.file(file);
+        return (await f.exists()) ? new Response(f) : new Response("not found", { status: 404 });
+      } catch {
+        return new Response("not found", { status: 404 });
+      }
+    },
+    error() {
+      return new Response("not found", { status: 404 });
     },
   });
 }

@@ -150,8 +150,8 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#8ccbff",
-              "uB": "#3a7fd0",
+              "uA": "#5dbbfd",
+              "uB": "#4384d6",
               "uViolet": 0.45,
               "uSeed": 0.3,
               "u_speed": 1
@@ -4946,7 +4946,7 @@
               "fill": "$t2",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "The owner's verdict: \"not implemented\". Every floating surface carries the travelling chrome rim.",
+              "content": "A flat glass panel with no metal rim reads as unfinished. Every floating surface carries the travelling chrome rim.",
               "lineHeight": 1.5,
               "fontFamily": "$font-sans",
               "fontSize": 16,
@@ -7097,8 +7097,8 @@
                 "enabled": true,
                 "url": "shaders/orb.glsl",
                 "uniforms": {
-                  "uA": "#8ccbff",
-                  "uB": "#3a7fd0",
+                  "uA": "#5dbbfd",
+                  "uB": "#4384d6",
                   "uViolet": 0.45,
                   "uSeed": 0.6,
                   "u_speed": 1
@@ -7406,8 +7406,8 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#8ccbff",
-              "uB": "#3a7fd0",
+              "uA": "#5dbbfd",
+              "uB": "#4384d6",
               "uViolet": 0.45,
               "uSeed": 0.3,
               "u_speed": 1
@@ -7427,9 +7427,9 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#9de6ff",
-              "uB": "#4aa7c9",
-              "uViolet": 0.08,
+              "uA": "#62d5fd",
+              "uB": "#4aa7d5",
+              "uViolet": 0.45,
               "uSeed": 0.12,
               "u_speed": 1
             }
@@ -7464,8 +7464,8 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#8fe3b0",
-              "uB": "#36a653",
+              "uA": "#53d5a3",
+              "uB": "#36a657",
               "uViolet": 0.08,
               "uSeed": 0.55,
               "u_speed": 1
@@ -7501,8 +7501,8 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#f6e2a8",
-              "uB": "#c2a457",
+              "uA": "#bcd3a9",
+              "uB": "#c2a45e",
               "uViolet": 0.08,
               "uSeed": 0.8,
               "u_speed": 1
@@ -7538,8 +7538,8 @@
             "enabled": true,
             "url": "shaders/orb.glsl",
             "uniforms": {
-              "uA": "#f9a8a0",
-              "uB": "#ca4037",
+              "uA": "#c2888f",
+              "uB": "#ca403b",
               "uViolet": 0.08,
               "uSeed": 0.33,
               "u_speed": 1

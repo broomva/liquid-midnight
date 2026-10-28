@@ -50,8 +50,10 @@ test("day mode beats a tone: tone blocks are emitted before the day block in bot
   const dayHex = css.indexOf("[data-lm-mode=day] {");
   const dayOk = css.indexOf("  [data-lm-mode=day] {");
   for (const tone of Object.keys(tokens.color.tone)) {
-    expect(css.indexOf(`[data-lm-tone=${tone}] {`)).toBeLessThan(dayHex);
-    expect(css.indexOf(`  [data-lm-tone=${tone}] {`)).toBeLessThan(dayOk);
+    const sel = `[data-lm-tone=${tone}]:not([data-lm-mode=day], [data-lm-mode=day] *) {`;
+    expect(css.indexOf(sel)).toBeGreaterThan(-1);
+    expect(css.indexOf(sel)).toBeLessThan(dayHex);
+    expect(css.indexOf(`  ${sel}`)).toBeLessThan(dayOk);
   }
 });
 
@@ -61,4 +63,10 @@ test("build-tokens has no side effects on import and its hex matches known value
   expect(oklchToHex("oklch(0 0 0)")).toBe("#000000");
   expect(oklchToHex("oklch(0.71 0.15 252)")).toBe("#54a5fc");
   expect(oklchToHex("oklch(1 0 0 / 0.5)")).toBe("#ffffff80");
+});
+
+test("committed Pencil files carry no Pen fileToken (public repo)", () => {
+  const { readdirSync } = require("node:fs");
+  for (const f of readdirSync(`${ROOT}design`).filter((n) => n.endsWith(".pen")))
+    expect(JSON.parse(readFileSync(`${ROOT}design/${f}`, "utf8")).fileToken).toBeUndefined();
 });

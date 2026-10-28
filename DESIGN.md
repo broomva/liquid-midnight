@@ -169,7 +169,7 @@ All drift `ease-in-out infinite alternate`. In capture mode, freeze them or driv
 - **Look** (reference: vault.rickybharti.com/orbloom): a thick glass sphere around a plasma core.
   - Plasma: two noise-bent filament arms (pow 14 / 22), 11 rays, two caustic layers, a rim flare and a hot core.
   - Glass: refraction `k = 1 − .4·r^2.4`, chromatic split only where r > .8, fresnel `(1 − z)³`, a bottom caustic, a top-left specular at (−.36, .44), a thin rim glint and a bloom out to 1.68 r.
-- **Colour:** pass any token. A = the colour lifted 40% toward cyan (filaments); B = colour × .8 (body). Blue orbs get a rim tint of .45 and other hues .08. That small blue-violet lift at the fresnel edge is part of the approved look; do not raise it.
+- **Colour:** pass any token. A = the colour lifted 40% toward cyan (filaments); B = the colour × (.8, .8, .85) per RGB channel (body). Blue orbs get a rim tint of .45 and other hues .08. That small blue-violet lift at the fresnel edge is part of the approved look; do not raise it.
 - **Use:**
   ```js
   ORB.attach(canvas); ORB.begin(ctx); orb(x, y, r, C.blue, t); ORB.end();
@@ -289,9 +289,9 @@ Measured contrast (WCAG 2), text on ground and on surface:
 | t1 | 18.2 | 16.6 | 15.8 | 17.0 |
 | t2 | 11.5 | 10.5 | 7.8 | 8.3 |
 | t3 | 6.1 | 5.5 | **4.4** | 4.8 |
-| blue | 7.6 | 6.9 | 4.5 | 4.9 |
+| blue | 7.6 | 6.9 | 4.5 | 4.8 |
 | green | 9.7 | 8.9 | **3.4** | 3.6 |
-| coral | 5.9 | 5.4 | 4.4 | 4.7 |
+| coral | 5.9 | 5.4 | 4.3 | 4.7 |
 | gold | 12.8 | 11.7 | **2.9** | 3.1 |
 
 - In day mode, use `t3`, green, coral and gold only for large text (≥ 24 px, 3:1) or with a label. For small metadata, put `t3` on `surface`.
