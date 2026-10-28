@@ -120,9 +120,26 @@ try {
     await Promise.resolve();
     await Promise.resolve();
     const shadowReleased = ORB.layers === beforeShadow - 1;
+    // a canvas first attached in the light DOM, then moved into a shadow root and re-attached, then removed
+    const mover = document.createElement("canvas");
+    mover.width = mover.height = 64;
+    host.append(mover);
+    ORB.attach(mover);
+    await new Promise((r) => setTimeout(r, 0));
+    const host2 = document.createElement("div");
+    host.append(host2);
+    const sh2 = host2.attachShadow({ mode: "open" });
+    sh2.append(mover);
+    ORB.attach(mover);
+    await new Promise((r) => setTimeout(r, 0));
+    const beforeMove = ORB.layers;
+    mover.remove();
+    await Promise.resolve();
+    await Promise.resolve();
+    const movedReleased = ORB.layers === beforeMove - 1;
     ORB.detach(cv);
     host.remove();
-    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased };
+    return { n, op, after: ORB.layers, ok: ORB.ok, autoReleased, shadowReleased, movedReleased };
   });
   check(
     life.n <= 3 && life.after <= 2 && life.ok,
@@ -131,6 +148,7 @@ try {
   check(life.op === "0.25", `orb layer mirrors its canvas opacity (${life.op})`);
   check(life.autoReleased, "an unmounted canvas releases its orb layer without another attach()");
   check(life.shadowReleased, "a canvas removed inside a shadow root releases its orb layer too");
+  check(life.movedReleased, "a canvas moved into a shadow root after its first attach is still released");
 
   // 4. determinism of renderAt
   const snap = () =>
